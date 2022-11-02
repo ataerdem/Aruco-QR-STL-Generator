@@ -2,7 +2,7 @@ import Part
 from FreeCAD import Vector
 from xml.dom import minidom
 
-def generate_aruco(base_thickness, cut_thickness, aruco_dir, stl_size, checkerboard_back=True, checkerboard_thickness=1, checkerboard_size=(10,10)):
+def generate_aruco(base_thickness, cut_thickness, aruco_dir, checkerboard_back=True, checkerboard_thickness=1, checkerboard_size=(11,11)):
 	"""
 
 	Creates two plates given a valid black and white svg. Works with https://chev.me/arucogen/. The purpose is to make it easier to 3d print qr codes and aruco markers. The function does NOT handle incorrectly formatted svgs and may produce unexpected results.
@@ -11,7 +11,6 @@ def generate_aruco(base_thickness, cut_thickness, aruco_dir, stl_size, checkerbo
 	base_thickness (float): Thickness of the white base
 	cut_thickness (float): Thickness of the black plate
 	aruco_dir (str): The directory of the svg that represents the image
-	stl_size (tuple): The size of the resulting object in milimeters (width, height)
 	checkerboard_back (bool): Crates a checkerboard pattern at the back when True. True by default. Might be useful for 3d printing.
 	checkerboard_thickness (float): The depth of the checkerboard pattern
 	checkerboard_size (tuple): Number of squares on the checkerboard pattern (width, height)
@@ -44,7 +43,8 @@ def generate_aruco(base_thickness, cut_thickness, aruco_dir, stl_size, checkerbo
 		for i in range(num_rects[0]):
 			for j in range(num_rects[1]):
 				if (i+j)%2 == 0 : continue
-				to_cut = Part.makeBox(rect_width,rect_height,checkerboard_thickness,Vector(rect_width*i,rect_height*j,base_thickness+cut_thickness-checkerboard_thickness))
+				collapse = 0.05
+				to_cut = Part.makeBox(rect_width*(1-collapse),rect_height*(1-collapse),checkerboard_thickness,Vector(rect_width*i+rect_width*collapse/2,rect_height*j+rect_height*collapse/2,base_thickness+cut_thickness-checkerboard_thickness))
 				white_plate = white_plate.cut(to_cut)
 
 	Part.show(base_plate)
@@ -53,8 +53,6 @@ def generate_aruco(base_thickness, cut_thickness, aruco_dir, stl_size, checkerbo
 if __name__ == "__main__":
 	aruco_dir = input("Image dir: \n")
 
-	width, height = float(input("Width: \n")), float(input("Height: \n"))
-	stl_size = (width, height) #mm width, height
 	white_thickness = float(input("White thickness: \n")) #mm
 	black_thickness = float(input("Black thickness: \n"))
 	checkerboard = True if input("Use checkerboard? (y/n): \n") == "y" else False
@@ -63,4 +61,4 @@ if __name__ == "__main__":
 	else:
 		checkerboard_thickness = 0
 
-	generate_aruco(white_thickness, black_thickness, aruco_dir, stl_size, checkerboard, checkerboard_thickness)
+	generate_aruco(white_thickness, black_thickness, aruco_dir, checkerboard, checkerboard_thickness)
